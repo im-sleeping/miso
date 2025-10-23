@@ -427,6 +427,14 @@ interface IHyperbolicAuction is IMisoMarket {
     );
 }
 
+interface IProRataFixedPrice is IMisoMarket {
+    function marketStatus() external view returns (
+        uint128 commitmentsTotal,
+        bool finalized,
+        bool usePointList
+    );
+}
+
 contract MarketHelper is BaseHelper, TokenHelper, DocumentHepler {
 
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -490,6 +498,23 @@ contract MarketHelper is BaseHelper, TokenHelper, DocumentHepler {
         uint128 totalTokens;
         uint128 minimumPrice;
         uint128 alpha;
+        uint128 commitmentsTotal;
+        bool finalized;
+        bool usePointList;
+        bool auctionSuccessful;
+        TokenInfo tokenInfo;
+        TokenInfo paymentCurrencyInfo;
+        Document[] documents;
+    }
+
+    struct ProRataFixedPriceInfo {
+        address addr;
+        address paymentCurrency;
+        uint64 startTime;
+        uint64 endTime;
+        uint128 totalTokens;
+        uint128 rate;
+        uint128 goal;
         uint128 commitmentsTotal;
         bool finalized;
         bool usePointList;
@@ -698,6 +723,34 @@ contract MarketHelper is BaseHelper, TokenHelper, DocumentHepler {
         }
         info.paymentCurrencyInfo = paymentCurrencyInfo;
         info.documents = getDocuments(_hyperbolicAuction);
+
+        return info;
+    }
+
+    function getProRataFixedPriceInfo(address payable _auction) public view returns (ProRataFixedPriceInfo memory) {
+        IProRataFixedPrice pr = IProRataFixedPrice(_auction);
+        ProRataFixedPriceInfo memory info;
+
+        info.addr = address(pr);
+        (info.startTime, info.endTime, info.totalTokens) = pr.marketInfo();
+        (info.rate, info.goal) = pr.marketPrice();
+        (info.auctionSuccessful) = pr.auctionSuccessful();
+        (
+            info.commitmentsTotal,
+            info.finalized,
+            info.usePointList
+        ) = pr.marketStatus();
+        info.tokenInfo = getTokenInfo(pr.auctionToken());
+
+        address paymentCurrency = pr.paymentCurrency();
+        TokenInfo memory paymentCurrencyInfo;
+        if (paymentCurrency == ETH_ADDRESS) {
+            paymentCurrencyInfo = _getETHInfo();
+        } else {
+            paymentCurrencyInfo = getTokenInfo(paymentCurrency);
+        }
+        info.paymentCurrencyInfo = paymentCurrencyInfo;
+        info.documents = getDocuments(_auction);
 
         return info;
     }

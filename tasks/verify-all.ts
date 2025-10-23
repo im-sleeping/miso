@@ -99,7 +99,7 @@ task('verify-all', 'Verify all contracts', async (_, { ethers, tenderly, run, ge
     {
       name: 'PostAuctionLauncher',
       address: postAuctionLauncher.address,
-      constructorArguments: [WNATIVE_ADDRESS[chainId]],
+      constructorArguments: [process.env.WETH_ADDRESS || WNATIVE_ADDRESS[chainId]],
     },
     {
       name: 'SushiToken',

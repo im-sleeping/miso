@@ -932,11 +932,6 @@
   dependencies:
     "@boringcrypto/boring-solidity" boringcrypto/BoringSolidity#8f2b54f645a7844ae266cc50dc3ae4c125c7b9fc
 
-"@sushiswap/contracts@^1.0.0-canary.0":
-  version "1.0.0-canary.0"
-  resolved "https://registry.yarnpkg.com/@sushiswap/contracts/-/contracts-1.0.0-canary.0.tgz#669490bb508fcccbb63608109a63d6e53c66e985"
-  integrity sha512-Ju5B8TcUx/9bgApj2b8vDgTlCog+LuVXhNjk+qdkwQD1aPgjc/Y5GpLDiehzWwOc3tiawvDJd0XEZwzQRDnDgg==
-
 "@sushiswap/core-sdk@1.0.0-canary.89":
   version "1.0.0-canary.89"
   resolved "https://registry.yarnpkg.com/@sushiswap/core-sdk/-/core-sdk-1.0.0-canary.89.tgz#a608c4154547c6916ad23b0b2bf197e107ee8746"

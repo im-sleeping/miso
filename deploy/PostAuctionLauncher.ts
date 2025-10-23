@@ -11,11 +11,26 @@ const deployFunction: DeployFunction = async function ({
 
   const chainId = parseInt(await getChainId())
 
-  if (!(chainId in WNATIVE_ADDRESS)) {
-    throw Error(`No WETH address for chain ${chainId}!`)
-  }
+  const { deploy, getOrNull } = deployments
 
-  const { deploy } = deployments
+  // Resolve WETH/WNATIVE: prefer env var, then SDK mapping, then local deployment
+  let wnativeAddress: string | undefined = process.env.WETH_ADDRESS || (WNATIVE_ADDRESS as Record<number, string>)[chainId]
+  if (!wnativeAddress) {
+    // Try to reuse an existing local deployment
+    const existingWeth = await getOrNull('WETH9')
+    if (existingWeth?.address) {
+      wnativeAddress = existingWeth.address
+    } else {
+      const { deployer } = await getNamedAccounts()
+      const weth9 = await deploy('WETH9', {
+        from: deployer,
+        log: true,
+        deterministicDeployment: false,
+        args: [],
+      })
+      wnativeAddress = weth9.address
+    }
+  }
 
   const { deployer } = await getNamedAccounts()
 
@@ -23,10 +38,10 @@ const deployFunction: DeployFunction = async function ({
     from: deployer,
     log: true,
     deterministicDeployment: false,
-    args: [WNATIVE_ADDRESS[chainId]],
+    args: [wnativeAddress],
   })
 
-  console.log('PostAuctionLauncher deployed at ', address)
+  console.log('PostAuctionLauncher deployed at ', address, 'with WETH', wnativeAddress)
 }
 
 export default deployFunction

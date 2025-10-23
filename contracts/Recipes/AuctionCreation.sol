@@ -184,9 +184,14 @@ contract AuctionCreation is SafeTransfer {
 
     uint256 auctionTemplateId = IAuctionTemplate(auctionTemplate).marketTemplate();
 
-    if (auctionTemplateId == 1) {
+    // Crowdsale (type 1) and ProRataFixedPrice (type 5) both expect mData to
+    // start with paymentCurrency, followed by totalTokens. The recipe needs the
+    // second uint256 (totalTokens) to pre-pull the sale tokens from the creator
+    // into MISOMarket for approval to the new market clone.
+    if (auctionTemplateId == 1 || auctionTemplateId == 5) {
       (, tokenForSale) = abi.decode(mData, (uint256, uint256));
     } else {
+      // Other templates encode totalTokens as the first uint256 in mData.
       tokenForSale = abi.decode(mData, (uint256));
     }
   }

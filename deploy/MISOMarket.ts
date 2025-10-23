@@ -13,13 +13,25 @@ const deployFunction: DeployFunction = async function ({
 
   const chainId = parseInt(await getChainId())
 
-  if (!(chainId in BENTOBOX_ADDRESS)) {
-    throw Error(`No BentoBox address for chain ${chainId}!`)
-  }
-
-  const { deploy } = deployments
+  const { deploy, getOrNull } = deployments
 
   const { deployer } = await getNamedAccounts()
+
+  // Resolve BentoBox address: prefer SDK mapping; otherwise deploy or reuse BentoFactoryLite
+  let bentoBoxAddress: string | undefined = (BENTOBOX_ADDRESS as Record<number, string>)[chainId]
+  if (!bentoBoxAddress) {
+    const existingLite = await getOrNull('BentoFactoryLite')
+    if (existingLite?.address) {
+      bentoBoxAddress = existingLite.address
+    } else {
+      const deployedLite = await deploy('BentoFactoryLite', {
+        from: deployer,
+        log: true,
+        deterministicDeployment: false,
+      })
+      bentoBoxAddress = deployedLite.address
+    }
+  }
 
   const { address } = await deploy('MISOMarket', {
     from: deployer,
@@ -39,12 +51,13 @@ const deployFunction: DeployFunction = async function ({
     const crowdsale = await ethers.getContract('Crowdsale')
     const dutchAuction = await ethers.getContract('DutchAuction')
     const hyperbolicAuction = await ethers.getContract('HyperbolicAuction')
+    const proRataFixedPrice = await ethers.getContract('ProRataFixedPrice')
     console.log('MISOMarket initilising')
     await (
       await misoMarket.initMISOMarket(
         accessControls.address,
-        BENTOBOX_ADDRESS[chainId],
-        [batchAuction.address, crowdsale.address, dutchAuction.address, hyperbolicAuction.address],
+        bentoBoxAddress,
+        [batchAuction.address, crowdsale.address, dutchAuction.address, hyperbolicAuction.address, proRataFixedPrice.address],
         {
           from: deployer,
         }
@@ -56,6 +69,6 @@ const deployFunction: DeployFunction = async function ({
 
 export default deployFunction
 
-deployFunction.dependencies = ['MISOAccessControls', 'BatchAuction', 'Crowdsale', 'DutchAuction', 'HyperbolicAuction']
+deployFunction.dependencies = ['MISOAccessControls', 'BatchAuction', 'Crowdsale', 'DutchAuction', 'HyperbolicAuction', 'ProRataFixedPrice']
 
 deployFunction.tags = ['MISOMarket']

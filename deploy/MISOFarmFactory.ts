@@ -1,4 +1,3 @@
-import { BENTOBOX_ADDRESS } from '@sushiswap/core-sdk'
 import { BigNumber } from '@ethersproject/bignumber'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -12,10 +11,6 @@ const deployFunction: DeployFunction = async function ({
   console.log('Running MISOFarmFactory deploy script')
 
   const chainId = parseInt(await getChainId())
-
-  if (!(chainId in BENTOBOX_ADDRESS)) {
-    throw Error(`No BentoBox address for chain ${chainId}!`)
-  }
 
   const { deploy } = deployments
 

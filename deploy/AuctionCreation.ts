@@ -13,7 +13,7 @@ const deployFunction: DeployFunction = async function ({
 
   const chainId = parseInt(await getChainId())
 
-  const { deploy } = deployments
+  const { deploy, getOrNull } = deployments
 
   const { deployer } = await getNamedAccounts()
 
@@ -21,6 +21,23 @@ const deployFunction: DeployFunction = async function ({
   const listFactory = await ethers.getContract('ListFactory')
   const misoLauncher = await ethers.getContract('MISOLauncher')
   const misoMarket = await ethers.getContract('MISOMarket')
+
+  // Resolve AMM factory address: prefer SDK mapping; otherwise deploy or reuse local UniswapV2Factory
+  let ammFactoryAddress: string | undefined = (FACTORY_ADDRESS as Record<number, string>)[chainId]
+  if (!ammFactoryAddress) {
+    const existing = await getOrNull('UniswapV2Factory')
+    if (existing?.address) {
+      ammFactoryAddress = existing.address
+    } else {
+      const deployedFactory = await deploy('UniswapV2Factory', {
+        from: deployer,
+        log: true,
+        deterministicDeployment: false,
+        args: [deployer], // feeToSetter
+      })
+      ammFactoryAddress = deployedFactory.address
+    }
+  }
 
   const { address } = await deploy('AuctionCreation', {
     from: deployer,
@@ -30,7 +47,7 @@ const deployFunction: DeployFunction = async function ({
       listFactory.address,
       misoLauncher.address,
       misoMarket.address,
-      FACTORY_ADDRESS[chainId],
+      ammFactoryAddress,
     ],
     deterministicDeployment: false,
   })

@@ -13,9 +13,10 @@ import 'solidity-coverage'
 import '@tenderly/hardhat-tenderly'
 import './tasks'
 
-import { HardhatUserConfig } from 'hardhat/config'
-import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { removeConsoleLog } from 'hardhat-preprocessor'
+import { HardhatUserConfig } from 'hardhat/config'
+
+import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 
 const accounts = {
   mnemonic: process.env.MNEMONIC || 'test test test test test test test test test test test junk',
@@ -183,6 +184,13 @@ const config: HardhatUserConfig = {
       url: 'https://arb1.arbitrum.io/rpc',
       accounts,
       chainId: 42161,
+      live: true,
+      saveDeployments: true,
+    },
+    anvil: {
+      url: 'http://127.0.0.1:8545',
+      accounts,
+      chainId: 31338,
       live: true,
       saveDeployments: true,
     },
